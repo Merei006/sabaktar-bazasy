@@ -58,13 +58,6 @@
     .tag.t-презентация { border-color: var(--accent); color: var(--warn); }
     .tag.t-тапсырма { border-color: var(--ok); color: var(--ok); }
     .empty { padding: 36px 20px; text-align: center; }
-    .viewer { position: fixed; inset: 0; background: rgba(8,14,26,.72); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .vbox { background: var(--surface); border-radius: 16px; width: min(1000px, 100%); height: min(86vh, 100%); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line); }
-    .vhead { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
-    .vhead b { margin-right: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .vbody { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; background: var(--bg); }
-    .vbody iframe { width: 100%; height: 100%; border: 0; }
-    .vbody img, .vbody video { max-width: 100%; max-height: 100%; }
     .hidden { display: none !important; }
     .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--brand); color: var(--brand-ink); padding: 12px 20px; border-radius: 12px; opacity: 0; pointer-events: none; transition: opacity .25s; max-width: 90vw; z-index: 60; }
     .toast.show { opacity: 1; }
@@ -90,7 +83,7 @@
       <section class="top">
         <div>
           <h1>Барлық материал бір жерде</h1>
-          <p class="muted" style="font-size:1.1rem">Жоспарларды, презентацияларды және тапсырмаларды жүктеп, пән мен сынып бойынша тауып, тікелей сайттан ашыңыз.</p>
+          <p class="muted" style="font-size:1.1rem">Жоспарларды, презентацияларды және тапсырмаларды сілтеме арқылы қосып, пән мен сынып бойынша тауып ашыңыз.</p>
           <p class="sec" id="countLine"></p>
         </div>
         <div class="card qrcard">
@@ -120,8 +113,8 @@
       <p class="muted" id="secDesc"></p>
 
       <div class="card" id="addBox">
-        <h2 id="addTitle">Файл жүктеу</h2>
-        <p class="sec" id="addHelp">Қабылданатын файлдар: PDF, сурет, бейне, TXT және т.б. Көлемі 20 МБ-қа дейін.</p>
+        <h2 id="addTitle">Материал қосу</h2>
+        <p class="sec" id="addHelp">Google Drive, Yandex Disk, Canva немесе басқа сілтемені қойыңыз. Файлды «Көруге қолжетімді» етіп ашық жасаңыз.</p>
         <div class="grid2">
           <input id="aTitle" placeholder="Материал атауы">
           <select id="aSubj">
@@ -135,10 +128,9 @@
           <select id="aType">
             <option>жоспар</option><option>презентация</option><option>тапсырма</option>
           </select>
-          <input id="aFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.mp4,.webm,.txt,.csv,.md,.json">
-          <input id="aUrl" type="url" placeholder="Немесе сілтеме (Google Drive т.б.)">
+          <input id="aUrl" type="url" placeholder="Сілтеме (https://...)" style="grid-column: 1 / -1;">
         </div>
-        <button class="btn primary" id="addBtn">Жүктеу</button>
+        <button class="btn primary" id="addBtn">Қосу</button>
         <p class="sec" id="addNote" style="margin:12px 0 0"></p>
       </div>
 
@@ -164,23 +156,12 @@
     </div>
   </main>
 
-  <div class="viewer hidden" id="viewer">
-    <div class="vbox">
-      <div class="vhead">
-        <b id="vtitle"></b>
-        <a class="btn ghost" id="vlink" target="_blank" rel="noopener">Жаңа бетте ашу</a>
-        <button class="btn primary" id="vclose">Жабу</button>
-      </div>
-      <div class="vbody" id="vbody"></div>
-    </div>
-  </div>
   <div class="toast" id="toast"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBsG8TJJDtbcfdRjXXUsHEXDtW62zCZo4Y",
@@ -194,12 +175,10 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
     let currentUser = null;
     let materials = [];
     let view = "home";
-    let objUrl = null;
 
     const $ = id => document.getElementById(id);
 
@@ -242,58 +221,8 @@
       });
     }
 
-    function kind(m) {
-      const e = (m.fileName || "").split(".").pop().toLowerCase();
-      if (e === "pdf") return "pdf";
-      if (["png","jpg","jpeg","webp","gif"].includes(e)) return "img";
-      if (["mp4","webm"].includes(e)) return "video";
-      return "text";
-    }
-
-    function closeViewer() {
-      $("viewer").classList.add("hidden");
-      $("vbody").innerHTML = "";
-      if (objUrl) { URL.revokeObjectURL(objUrl); objUrl = null; }
-    }
-
-    function openFile(m) {
-      closeViewer();
-      const body = $("vbody");
-      const k = kind(m);
-      const url = m.url || m.downloadURL;
-      $("vtitle").textContent = m.title + (m.fileName ? " · " + m.fileName : "");
-      $("vlink").href = url;
-
-      if (k === "pdf") {
-        const f = document.createElement("iframe");
-        f.src = url;
-        body.appendChild(f);
-      } else if (k === "img") {
-        const i = document.createElement("img");
-        i.src = url;
-        body.appendChild(i);
-      } else if (k === "video") {
-        const v = document.createElement("video");
-        v.src = url;
-        v.controls = true;
-        body.appendChild(v);
-      } else {
-        const pr = document.createElement("pre");
-        pr.textContent = "Жүктелуде...";
-        body.appendChild(pr);
-        fetch(url).then(r => r.text()).then(t => pr.textContent = t)
-          .catch(() => pr.textContent = "Файлды ашу мүмкін болмады");
-      }
-      $("viewer").classList.remove("hidden");
-    }
-
-    $("vclose").onclick = closeViewer;
-
     async function removeMaterial(m, btn) {
       try {
-        if (m.storagePath) {
-          await deleteObject(ref(storage, m.storagePath));
-        }
         await deleteDoc(doc(db, "materials", m.id));
         toast("Өшірілді");
       } catch (e) {
@@ -315,9 +244,9 @@
 
       const all = materials;
       const nT = all.filter(m => m.type === "тапсырма").length;
-      $("cntMat").textContent = (all.length - nT) + " файл";
-      $("cntTask").textContent = nT + " файл";
-      $("countLine").textContent = "Жүктелген файл: " + all.length;
+      $("cntMat").textContent = (all.length - nT) + " материал";
+      $("cntTask").textContent = nT + " тапсырма";
+      $("countLine").textContent = "Жалпы: " + all.length + " материал";
 
       let rows = all.filter(m => view === "tasks" ? m.type === "тапсырма" : m.type !== "тапсырма");
       rows = rows.filter(m => {
@@ -330,7 +259,6 @@
 
       if (rows.length === 0) {
         $("none").classList.remove("hidden");
-        $("none").textContent = "Ештеңе табылмады";
       } else {
         $("none").classList.add("hidden");
       }
@@ -342,18 +270,20 @@
           <h3>${m.title}</h3>
           <span class="tag t-${m.type}">${m.type}</span>
           <p class="muted" style="margin:0">${m.subject}${m.grade ? " · " + m.grade + "-сынып" : ""}</p>
-          ${m.fileName ? `<p class="sec" style="margin:0">${m.fileName}</p>` : ""}
+          <p class="sec" style="margin:0">${m.email || ""}</p>
         `;
         const acts = document.createElement("div");
         acts.className = "acts";
 
-        const openBtn = document.createElement("button");
+        const openBtn = document.createElement("a");
         openBtn.className = "btn primary";
         openBtn.textContent = "Ашу";
-        openBtn.onclick = () => openFile(m);
+        openBtn.href = m.url;
+        openBtn.target = "_blank";
+        openBtn.rel = "noopener";
         acts.appendChild(openBtn);
 
-        // Тек өз файлын өшіре алады
+        // Тек өз материалын өшіре алады
         if (m.uid === currentUser.uid) {
           const delBtn = document.createElement("button");
           delBtn.className = "btn ghost";
@@ -385,12 +315,10 @@
       });
     }
 
-    // Іздеу
     ["q", "fSubj", "fGrade", "fType"].forEach(id => {
       $(id).oninput = $(id).onchange = render;
     });
 
-    // Навигация
     function go(v) {
       view = v;
       $("view-home").classList.toggle("hidden", v !== "home");
@@ -406,17 +334,15 @@
         $("secDesc").textContent = "Сабақ жоспарлары мен презентациялар.";
         $("aType").innerHTML = "<option>жоспар</option><option>презентация</option>";
         $("fType").innerHTML = '<option value="">Барлық түрі</option><option>жоспар</option><option>презентация</option>';
-        $("aFile").classList.remove("hidden");
-        $("addTitle").textContent = "Файл жүктеу";
-        $("addBtn").textContent = "Жүктеу";
+        $("addTitle").textContent = "Материал қосу";
+        $("addHelp").textContent = "Google Drive, Yandex Disk немесе басқа сілтемені қойыңыз. Файлды «Көруге қолжетімді» етіп ашық жасаңыз.";
       } else if (v === "tasks") {
         $("secTitle").textContent = "Тапсырмалар";
         $("secDesc").textContent = "Оқушыларға арналған тапсырмалар.";
         $("aType").innerHTML = "<option>тапсырма</option>";
         $("fType").innerHTML = '<option value="">Барлық түрі</option>';
-        $("aFile").classList.add("hidden");
         $("addTitle").textContent = "Тапсырма қосу";
-        $("addBtn").textContent = "Сілтеме қосу";
+        $("addHelp").textContent = "Тапсырма сілтемесін қойыңыз (Google Forms, Canva, Drive және т.б.).";
       }
       window.scrollTo(0, 0);
       render();
@@ -426,60 +352,43 @@
       b.addEventListener("click", () => go(b.dataset.go));
     });
 
-    // Жүктеу
+    // Қосу
     $("addBtn").onclick = async () => {
       const title = $("aTitle").value.trim();
       const subject = $("aSubj").value;
       const grade = $("aGrade").value;
       const type = $("aType").value;
-      const file = $("aFile").files[0];
       const url = $("aUrl").value.trim();
 
       if (!title) return toast("Атауын жазыңыз");
-      if (!file && !url) return toast("Файл немесе сілтеме қосыңыз");
+      if (!url) return toast("Сілтемені қойыңыз");
+      if (!url.startsWith("http")) return toast("Сілтеме https://... деп басталуы керек");
 
       const btn = $("addBtn");
       btn.disabled = true;
-      btn.textContent = "Жүктелуде...";
-      $("addNote").textContent = "";
+      btn.textContent = "Қосылуда...";
 
       try {
-        let downloadURL = url;
-        let storagePath = null;
-        let fileName = null;
-
-        if (file) {
-          if (file.size > 20 * 1024 * 1024) throw new Error("Файл 20 МБ-тан үлкен");
-          storagePath = `materials/${currentUser.uid}/${Date.now()}_${file.name}`;
-          const storageRef = ref(storage, storagePath);
-          await uploadBytes(storageRef, file);
-          downloadURL = await getDownloadURL(storageRef);
-          fileName = file.name;
-        }
-
         await addDoc(collection(db, "materials"), {
           title,
           subject,
           grade,
           type,
-          url: downloadURL,
-          fileName,
-          storagePath,
+          url,
           uid: currentUser.uid,
           email: currentUser.email,
           createdAt: Date.now()
         });
 
         $("aTitle").value = "";
-        $("aFile").value = "";
         $("aUrl").value = "";
         toast("Сәтті қосылды!");
       } catch (e) {
         console.error(e);
-        toast(e.message || "Қате пайда болды");
+        toast("Қате пайда болды");
       } finally {
         btn.disabled = false;
-        btn.textContent = view === "tasks" ? "Сілтеме қосу" : "Жүктеу";
+        btn.textContent = "Қосу";
       }
     };
 
