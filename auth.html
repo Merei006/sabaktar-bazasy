@@ -3,197 +3,423 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Тіркелу / Кіру — Сабақтар базасы</title>
+  <title>Сабақтар базасы — Кіру және QR-код</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    #qrcode img, #qrcode canvas { border-radius: 14px; margin: 0 auto; }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-900 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gradient-to-br from-slate-100 via-slate-50 to-emerald-50/40 text-slate-900 min-h-screen flex flex-col justify-between p-4">
 
-  <div class="bg-white rounded-3xl border border-slate-200 shadow-xl max-w-md w-full p-6 sm:p-8">
-    <!-- Бас тақырып -->
-    <div class="text-center mb-6">
-      <div class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-bold text-lg mx-auto mb-3 shadow-sm">
-        СБ
-      </div>
-      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Сабақтар базасы</h1>
-      <p class="text-xs text-slate-500 mt-1">Мұғалімдердің жеке оқшауланған материалдар қоры</p>
+  <!-- Жоғарғы тақырып -->
+  <header class="py-4 text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-xs text-xs font-semibold text-slate-700 mb-2">
+      <i class="fa-solid fa-shield-halved text-emerald-600"></i> Жеке қор & Жедел QR-код жүйесі
     </div>
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Сабақтар мен материалдар базасы</h1>
+    <p class="text-xs sm:text-sm text-slate-500 mt-1">Мұғалімдердің сабақ жоспарлары мен тапсырмаларын оқшауланған жеке қорында сақтау</p>
+  </header>
 
-    <!-- Тілмелер (Кіру / Тіркелу) -->
-    <div class="flex bg-slate-100 p-1 rounded-2xl mb-6 text-xs font-semibold">
-      <button type="button" id="tabLogin" class="flex-1 py-2.5 rounded-xl bg-white text-slate-900 shadow-xs cursor-pointer">
-        Кіру
-      </button>
-      <button type="button" id="tabRegister" class="flex-1 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 cursor-pointer">
-        Тіркелу
-      </button>
+  <!-- Телефоннан сканерлеп ашқан кездегі растау терезесі -->
+  <div id="mobileConfirmCard" class="hidden max-w-sm mx-auto my-auto w-full bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 text-center">
+    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-xl">
+      <i class="fa-solid fa-mobile-screen"></i>
     </div>
-
-    <!-- Хабарлама -->
-    <div id="msg" class="hidden mb-4 p-3 rounded-xl text-xs flex items-center gap-2"></div>
-
-    <!-- Кіру формасы -->
-    <form id="loginForm" class="space-y-4">
-      <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Email пошта</label>
-        <div class="relative">
-          <i class="fa-regular fa-envelope text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 text-xs"></i>
-          <input type="email" id="loginEmail" required placeholder="email@example.com" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm bg-slate-50 focus:bg-white focus:outline-none focus:border-slate-800" />
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Құпиясөз</label>
-        <div class="relative">
-          <i class="fa-solid fa-lock text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 text-xs"></i>
-          <input type="password" id="loginPassword" required placeholder="••••••••" minlength="6" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm bg-slate-50 focus:bg-white focus:outline-none focus:border-slate-800" />
-        </div>
-      </div>
-
-      <button type="submit" id="loginBtn" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md transition-all cursor-pointer">
-        Жүйеге кіру
-      </button>
-    </form>
-
-    <!-- Тіркелу формасы -->
-    <form id="registerForm" class="hidden space-y-4">
-      <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Email пошта</label>
-        <div class="relative">
-          <i class="fa-regular fa-envelope text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 text-xs"></i>
-          <input type="email" id="regEmail" required placeholder="email@example.com" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm bg-slate-50 focus:bg-white focus:outline-none focus:border-slate-800" />
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Құпиясөз</label>
-        <div class="relative">
-          <i class="fa-solid fa-lock text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 text-xs"></i>
-          <input type="password" id="regPassword" required placeholder="Кемінде 6 таңба" minlength="6" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm bg-slate-50 focus:bg-white focus:outline-none focus:border-slate-800" />
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Құпиясөзді қайталаңыз</label>
-        <div class="relative">
-          <i class="fa-solid fa-lock text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 text-xs"></i>
-          <input type="password" id="regPassword2" required placeholder="Құпиясөзді қайта теріңіз" minlength="6" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm bg-slate-50 focus:bg-white focus:outline-none focus:border-slate-800" />
-        </div>
-      </div>
-
-      <button type="submit" id="regBtn" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md transition-all cursor-pointer">
-        Жеке қор ашып тіркелу
-      </button>
-    </form>
+    <h2 class="text-lg font-bold text-slate-900 mb-1">Компьютерге кіруді растау</h2>
+    <p class="text-xs text-slate-500 mb-5">Компьютер экранындағы Сабақтар базасының жеке қорына кіруге рұқсат бересіз бе?</p>
+    
+    <div id="mobileAuthStatus" class="space-y-3"></div>
   </div>
 
+  <!-- Негізгі 2 бағанды контейнер (Сол жақта форма, Оң жақта QR-код) -->
+  <main id="mainContainer" class="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-6 my-auto py-4">
+
+    <!-- 1-БАҒАН: Тіркелу / Кіру формасы -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-8 flex flex-col justify-between">
+      <div>
+        <div class="text-center mb-6">
+          <h2 class="text-xl font-bold text-slate-900">Аккаунтқа кіру</h2>
+          <p class="text-xs text-slate-500 mt-1">Жеке материалдар базаңызды ашыңыз</p>
+        </div>
+
+        <!-- Тілмелер -->
+        <div class="flex bg-slate-100 p-1 rounded-2xl mb-6 text-xs font-semibold">
+          <button type="button" id="tabLogin" class="flex-1 py-2.5 rounded-xl bg-white text-slate-900 shadow-xs cursor-pointer">
+            Кіру
+          </button>
+          <button type="button" id="tabRegister" class="flex-1 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 cursor-pointer">
+            Тіркелу
+          </button>
+        </div>
+
+        <div id="formMsg" class="hidden mb-4 p-3 rounded-xl text-xs flex items-center gap-2"></div>
+
+        <!-- Кіру формасы -->
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Email пошта</label>
+            <div class="relative">
+              <i class="fa-regular fa-envelope text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 text-xs"></i>
+              <input type="email" id="loginEmail" required placeholder="email@example.com" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm bg-slate-50 focus:bg-white focus:outline-none focus:border-slate-800" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Құпиясөз</label>
+            <div class="relative">
+              <i class="fa-solid fa-lock text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 text-xs"></i>
+              <input type="password" id="loginPassword" required placeholder="••••••••" minlength="6" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm bg-slate-50 focus:bg-white focus:outline-none focus:border-slate-800" />
+            </div>
+          </div>
+
+          <button type="submit" id="loginBtn" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md transition-all cursor-pointer">
+            Жүйеге кіру
+          </button>
+        </form>
+
+        <!-- Тіркелу формасы -->
+        <form id="registerForm" class="hidden space-y-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Толық аты-жөніңіз</label>
+            <input type="text" id="regName" required placeholder="Мысалы: Мерей Теміржан" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:bg-white" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Email пошта</label>
+            <input type="email" id="regEmail" required placeholder="email@example.com" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:bg-white" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Негізгі пәніңіз</label>
+            <select id="regSubject" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:bg-white text-slate-700">
+              <option value="Математика">Математика</option>
+              <option value="Қазақ тілі мен әдебиеті">Қазақ тілі мен әдебиеті</option>
+              <option value="Информатика">Информатика</option>
+              <option value="Физика">Физика</option>
+              <option value="Химия">Химия</option>
+              <option value="Биология">Биология</option>
+              <option value="Ағылшын тілі">Ағылшын тілі</option>
+              <option value="Тарих">Тарих</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Құпиясөз</label>
+            <input type="password" id="regPassword" required placeholder="Кемінде 6 таңба" minlength="6" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:bg-white" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Құпиясөзді қайталаңыз</label>
+            <input type="password" id="regPassword2" required placeholder="Құпиясөзді қайта теріңіз" minlength="6" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:bg-white" />
+          </div>
+
+          <button type="submit" id="regBtn" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md transition-all cursor-pointer">
+            Жеке қор ашып тіркелу
+          </button>
+        </form>
+      </div>
+
+      <p class="text-[11px] text-slate-400 text-center mt-4">
+        🔒 Барлық деректер әр мұғалімнің жеке UID-іне сенімді оқшауланады
+      </p>
+    </div>
+
+    <!-- 2-БАҒАН: Нақты QR-код арқылы телефонмен қосылу -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-8 flex flex-col items-center justify-between text-center">
+      <div>
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold mb-2 border border-emerald-200">
+          <i class="fa-solid fa-qrcode text-xs"></i> Телефонмен жылдам кіру
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">Компьютерге QR-кодпен қосылу</h2>
+        <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+          Телефон камерасын экранға бағыттап, жеке базаңызға құпиясөзсіз кіріңіз
+        </p>
+
+        <!-- QR контейнері -->
+        <div class="relative p-3 bg-slate-50 rounded-2xl border-2 border-slate-200 shadow-inner my-4 min-h-[220px] min-w-[220px] flex items-center justify-center">
+          <div id="qrcode"></div>
+          
+          <div id="qrApprovedMsg" class="hidden absolute inset-0 bg-white/95 rounded-2xl flex flex-col items-center justify-center p-4">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl mb-2">
+              <i class="fa-solid fa-check"></i>
+            </div>
+            <p class="font-bold text-slate-900 text-sm">Расталды!</p>
+            <p class="text-xs text-slate-500 mt-0.5">Жеке базаңыз ашылуда...</p>
+          </div>
+        </div>
+
+        <!-- Таймер және жаңарту -->
+        <div class="flex items-center justify-between w-full max-w-xs mx-auto text-xs text-slate-500 mb-4">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Күтілуде: <strong id="timerText">120</strong> сек</span>
+          </span>
+          <button id="refreshQrBtn" class="text-slate-600 hover:text-emerald-700 font-semibold inline-flex items-center gap-1 cursor-pointer">
+            <i class="fa-solid fa-rotate-right text-xs"></i> Жаңарту
+          </button>
+        </div>
+      </div>
+
+      <!-- Нұсқаулық -->
+      <div class="w-full pt-4 border-t border-slate-100 text-left">
+        <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Қалай қосылу керек?</h4>
+        <ol class="space-y-1.5 text-xs text-slate-600 list-decimal pl-4">
+          <li>Телефоныңыздың камерасын ашыңыз</li>
+          <li>Экрандағы QR-кодқа бағыттап, пайда болған сілтемені ашыңыз</li>
+          <li>Телефонда <strong>«Кіруді растау»</strong> батырмасын басыңыз</li>
+        </ol>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="py-3 text-center text-xs text-slate-400 border-t border-slate-200/60 mt-4">
+    Сабақтар базасы • Әр қолданушының жеке қоры сенімді қорғалған
+  </footer>
+
+  <!-- Firebase Скрипті -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBsG8TJJDtbcfdRjXXUsHEXDtW62zCZo4Y",
       authDomain: "sabaktar-bazasy.firebaseapp.com",
       projectId: "sabaktar-bazasy",
+      firestoreDatabaseId: "ai-studio-qr-fb4cebab-7d66-428f-b60e-a0e1f6d61b02",
       storageBucket: "sabaktar-bazasy.firebasestorage.app",
       messagingSenderId: "659458804570",
-      appId: "1:659458804570:web:7774accb2ff03204f28163"
+      appId: "1:659458804570:web:ab9d14e008afc86cf28163"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || "(default)");
 
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        window.location.href = "index.html";
+    const urlParams = new URLSearchParams(window.location.search);
+    const pairSessionId = urlParams.get('pair');
+
+    // ТЕЛЕФОННАН QR АРҚЫЛЫ АШЫЛҒАНДА:
+    if (pairSessionId) {
+      document.getElementById('mainContainer').classList.add('hidden');
+      const confirmCard = document.getElementById('mobileConfirmCard');
+      confirmCard.classList.remove('hidden');
+
+      onAuthStateChanged(auth, async user => {
+        const statusBox = document.getElementById('mobileAuthStatus');
+        if (user) {
+          statusBox.innerHTML = `
+            <div class="bg-emerald-50 p-3 rounded-2xl border border-emerald-200 text-left mb-4">
+              <div class="text-[10px] font-bold text-emerald-800 uppercase">Қазіргі аккаунтыңыз:</div>
+              <div class="font-bold text-sm text-slate-900">${user.displayName || 'Мұғалім'}</div>
+              <div class="text-xs text-slate-500">${user.email}</div>
+            </div>
+            <button id="approvePairBtn" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md cursor-pointer flex items-center justify-center gap-2">
+              <i class="fa-solid fa-check"></i> Компьютерге кіруді растау
+            </button>
+          `;
+
+          document.getElementById('approvePairBtn').onclick = async () => {
+            try {
+              await setDoc(doc(db, "qr_sessions", pairSessionId), {
+                status: 'approved',
+                uid: user.uid,
+                email: user.email,
+                name: user.displayName || user.email.split('@')[0],
+                confirmedAt: Date.now()
+              }, { merge: true });
+
+              statusBox.innerHTML = `
+                <div class="p-4 bg-emerald-100 text-emerald-800 rounded-2xl text-xs font-bold flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-circle-check text-base"></i> Сәтті расталды! Компьютерде жеке қор ашылды.
+                </div>
+              `;
+            } catch (err) {
+              alert("Растау қатесі: " + err.message);
+            }
+          };
+        } else {
+          statusBox.innerHTML = `
+            <p class="text-xs text-slate-600 mb-3">Компьютерге кіру үшін телефонда алдымен логин мен құпиясөзіңізді енгізіңіз:</p>
+            <input type="email" id="phoneEmail" placeholder="Email" class="w-full px-3 py-2 border rounded-xl text-xs mb-2">
+            <input type="password" id="phonePass" placeholder="Құпиясөз" class="w-full px-3 py-2 border rounded-xl text-xs mb-3">
+            <button id="phoneLoginAndApprove" class="w-full py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold cursor-pointer">
+              Кіру және Компьютерді растау
+            </button>
+          `;
+
+          document.getElementById('phoneLoginAndApprove').onclick = async () => {
+            const em = document.getElementById('phoneEmail').value.trim();
+            const pw = document.getElementById('phonePass').value;
+            try {
+              const uc = await signInWithEmailAndPassword(auth, em, pw);
+              await setDoc(doc(db, "qr_sessions", pairSessionId), {
+                status: 'approved',
+                uid: uc.user.uid,
+                email: uc.user.email,
+                name: uc.user.displayName || uc.user.email.split('@')[0],
+                confirmedAt: Date.now()
+              }, { merge: true });
+
+              statusBox.innerHTML = `
+                <div class="p-4 bg-emerald-100 text-emerald-800 rounded-2xl text-xs font-bold">
+                  ✓ Сәтті расталды! Компьютер жеке базаңызды ашты.
+                </div>
+              `;
+            } catch (err) {
+              alert("Кіру қатесі: " + err.message);
+            }
+          };
+        }
+      });
+    } else {
+      // КОМПЬЮТЕРДЕГІ ДИНАМИКАЛЫҚ QR-КОД ЖҮЙЕСІ:
+      let currentSessionId = '';
+      let timerVal = 120;
+      let timerInterval = null;
+      let qrUnsub = null;
+
+      function createQrSession() {
+        if (timerInterval) clearInterval(timerInterval);
+        if (qrUnsub) qrUnsub();
+
+        currentSessionId = 'qr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        timerVal = 120;
+        document.getElementById('timerText').textContent = timerVal;
+        document.getElementById('qrApprovedMsg').classList.add('hidden');
+
+        // Firestore-да сессия тіркеу
+        setDoc(doc(db, "qr_sessions", currentSessionId), {
+          status: 'pending',
+          createdAt: Date.now(),
+          expiresAt: Date.now() + 120000
+        });
+
+        // Телефон сканерлейтін сілтеме
+        const pairUrl = `${window.location.origin}${window.location.pathname}?pair=${currentSessionId}`;
+        const qrContainer = document.getElementById('qrcode');
+        qrContainer.innerHTML = '';
+        new QRCode(qrContainer, {
+          text: pairUrl,
+          width: 190,
+          height: 190,
+          colorDark: "#0f172a",
+          colorLight: "#ffffff"
+        });
+
+        // 120 сек таймер
+        timerInterval = setInterval(() => {
+          timerVal--;
+          document.getElementById('timerText').textContent = timerVal;
+          if (timerVal <= 0) {
+            clearInterval(timerInterval);
+            document.getElementById('timerText').textContent = 'Мерзімі бітті';
+          }
+        }, 1000);
+
+        // Телефоннан расталуын нақты уақытта күту (Realtime listener)
+        qrUnsub = onSnapshot(doc(db, "qr_sessions", currentSessionId), snap => {
+          const data = snap.data();
+          if (data && data.status === 'approved') {
+            clearInterval(timerInterval);
+            document.getElementById('qrApprovedMsg').classList.remove('hidden');
+            localStorage.setItem('qr_logged_user', JSON.stringify({ uid: data.uid, email: data.email, name: data.name }));
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 600);
+          }
+        });
       }
-    });
 
-    const tabLogin = document.getElementById("tabLogin");
-    const tabRegister = document.getElementById("tabRegister");
-    const loginForm = document.getElementById("loginForm");
-    const registerForm = document.getElementById("registerForm");
-    const msg = document.getElementById("msg");
+      createQrSession();
+      document.getElementById('refreshQrBtn').onclick = createQrSession;
 
-    function showMsg(text, isError = true) {
-      msg.textContent = text;
-      msg.className = isError 
-        ? "mb-4 p-3 rounded-xl text-xs flex items-center gap-2 bg-red-50 text-red-700 border border-red-200"
-        : "mb-4 p-3 rounded-xl text-xs flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200";
+      // Кәдімгі кіру тексерісі
+      onAuthStateChanged(auth, user => {
+        if (user && !pairSessionId) {
+          window.location.href = "index.html";
+        }
+      });
+
+      const tabLogin = document.getElementById("tabLogin");
+      const tabRegister = document.getElementById("tabRegister");
+      const loginForm = document.getElementById("loginForm");
+      const registerForm = document.getElementById("registerForm");
+      const formMsg = document.getElementById("formMsg");
+
+      function showMsg(text, isError = true) {
+        formMsg.textContent = text;
+        formMsg.className = isError 
+          ? "mb-4 p-3 rounded-xl text-xs flex items-center gap-2 bg-red-50 text-red-700 border border-red-200"
+          : "mb-4 p-3 rounded-xl text-xs flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200";
+        formMsg.classList.remove('hidden');
+      }
+
+      tabLogin.onclick = () => {
+        tabLogin.className = "flex-1 py-2.5 rounded-xl bg-white text-slate-900 shadow-xs cursor-pointer";
+        tabRegister.className = "flex-1 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 cursor-pointer";
+        loginForm.classList.remove("hidden");
+        registerForm.classList.add("hidden");
+        formMsg.classList.add("hidden");
+      };
+
+      tabRegister.onclick = () => {
+        tabRegister.className = "flex-1 py-2.5 rounded-xl bg-white text-slate-900 shadow-xs cursor-pointer";
+        tabLogin.className = "flex-1 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 cursor-pointer";
+        registerForm.classList.remove("hidden");
+        loginForm.classList.add("hidden");
+        formMsg.classList.add("hidden");
+      };
+
+      loginForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const em = document.getElementById("loginEmail").value.trim();
+        const pw = document.getElementById("loginPassword").value;
+        const btn = document.getElementById("loginBtn");
+        btn.disabled = true;
+        btn.textContent = "Күтіңіз...";
+
+        try {
+          await signInWithEmailAndPassword(auth, em, pw);
+          showMsg("Сәтті кірдіңіз!", false);
+          setTimeout(() => window.location.href = "index.html", 400);
+        } catch (err) {
+          showMsg(err.message.includes('credential') ? "Email немесе құпиясөз қате" : "Кіру қатесі: " + err.message);
+          btn.disabled = false;
+          btn.textContent = "Жүйеге кіру";
+        }
+      };
+
+      registerForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const nm = document.getElementById("regName").value.trim();
+        const em = document.getElementById("regEmail").value.trim();
+        const pw = document.getElementById("regPassword").value;
+        const pw2 = document.getElementById("regPassword2").value;
+        const btn = document.getElementById("regBtn");
+
+        if (pw !== pw2) return showMsg("Құпиясөздер сәйкес келмейді");
+        if (pw.length < 6) return showMsg("Құпиясөз кемінде 6 таңба болуы тиіс");
+
+        btn.disabled = true;
+        btn.textContent = "Тіркелуде...";
+
+        try {
+          const uc = await createUserWithEmailAndPassword(auth, em, pw);
+          await updateProfile(uc.user, { displayName: nm });
+          showMsg("Тіркелу сәтті аяқталды!", false);
+          setTimeout(() => window.location.href = "index.html", 500);
+        } catch (err) {
+          showMsg("Тіркелу қатесі: " + err.message);
+          btn.disabled = false;
+          btn.textContent = "Жеке қор ашып тіркелу";
+        }
+      };
     }
-
-    tabLogin.onclick = () => {
-      tabLogin.className = "flex-1 py-2.5 rounded-xl bg-white text-slate-900 shadow-xs cursor-pointer";
-      tabRegister.className = "flex-1 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 cursor-pointer";
-      loginForm.classList.remove("hidden");
-      registerForm.classList.add("hidden");
-      msg.classList.add("hidden");
-    };
-
-    tabRegister.onclick = () => {
-      tabRegister.className = "flex-1 py-2.5 rounded-xl bg-white text-slate-900 shadow-xs cursor-pointer";
-      tabLogin.className = "flex-1 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 cursor-pointer";
-      registerForm.classList.remove("hidden");
-      loginForm.classList.add("hidden");
-      msg.classList.add("hidden");
-    };
-
-    loginForm.onsubmit = async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value;
-      const btn = document.getElementById("loginBtn");
-
-      btn.disabled = true;
-      btn.textContent = "Күтіңіз...";
-
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        showMsg("Сәтті кірдіңіз!", false);
-        setTimeout(() => window.location.href = "index.html", 400);
-      } catch (err) {
-        let text = "Кіру қатесі";
-        if (err.code === "auth/user-not-found" || err.code === "auth/invalid-credential") text = "Email немесе құпиясөз қате";
-        if (err.code === "auth/wrong-password") text = "Құпиясөз дұрыс емес";
-        if (err.code === "auth/invalid-email") text = "Email форматы дұрыс емес";
-        showMsg(text, true);
-        btn.disabled = false;
-        btn.textContent = "Жүйеге кіру";
-      }
-    };
-
-    registerForm.onsubmit = async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("regEmail").value.trim();
-      const password = document.getElementById("regPassword").value;
-      const password2 = document.getElementById("regPassword2").value;
-      const btn = document.getElementById("regBtn");
-
-      if (password !== password2) {
-        showMsg("Құпиясөздер бір-біріне сәйкес келмейді", true);
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = "Тіркелуде...";
-
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        showMsg("Тіркелу сәтті аяқталды!", false);
-        setTimeout(() => window.location.href = "index.html", 500);
-      } catch (err) {
-        let text = "Тіркелу мүмкін болмады";
-        if (err.code === "auth/email-already-in-use") text = "Бұл Email пошта тіркелген";
-        if (err.code === "auth/weak-password") text = "Құпиясөз кемінде 6 таңба болуы керек";
-        if (err.code === "auth/invalid-email") text = "Email форматы дұрыс емес";
-        showMsg(text, true);
-        btn.disabled = false;
-        btn.textContent = "Жеке қор ашып тіркелу";
-      }
-    };
   </script>
 </body>
 </html>
