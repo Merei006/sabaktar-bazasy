@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Сабақтар базасы — Басқару Панелі (GitHub Pages)</title>
+  <title>Сабақтар базасы — Басқару Панелі (Firebase)</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,29 +14,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen pb-16">
 
-  <script>
-    const API_BASE = "https://ais-pre-yintlyh4kt6us2nlwnxcis-763259711023.asia-east1.run.app/api";
-    const token = localStorage.getItem("sabak_token");
-    let currentUser = null;
-    try {
-      currentUser = JSON.parse(localStorage.getItem("sabak_user") || "null");
-    } catch(e) {}
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const sharedGroupQuery = urlParams.get("group") || urlParams.get("grp");
-
-    if (!token && !sharedGroupQuery) {
-      window.location.href = "auth.html";
-    }
-
-    const isAdmin = currentUser && (
-      currentUser.role === 'admin' || 
-      currentUser.email?.toLowerCase() === 'temirzhanmerei06@gmail.com' ||
-      currentUser.isAdmin === true
-    );
-  </script>
-
-  <!-- ЖОҒАРҒЫ МӘЗІР (HEADER) -->
+  <!-- ЖОҒАРҒЫ МӘЗІР -->
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -46,18 +24,17 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 class="font-bold text-slate-900 text-base leading-tight">Сабақтар базасы</h1>
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-semibold border border-blue-200">
-              GitHub Pages • Cloud API
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[10px] font-semibold border border-amber-200">
+              <i class="fa-solid fa-fire text-amber-600 text-[9px]"></i> Firebase Firestore
             </span>
             <span id="adminBadge" class="hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold border border-amber-300">
               <i class="fa-solid fa-crown text-amber-600"></i> Бас Әкімші
             </span>
           </div>
-          <p id="userStatusLine" class="text-[11px] text-slate-500">Жүктелуде...</p>
+          <p id="userStatusLine" class="text-[11px] text-slate-500">Firestore-ға қосылуда...</p>
         </div>
       </div>
 
-      <!-- Навигация батырмалары -->
       <div class="flex items-center gap-2">
         <div class="hidden sm:flex bg-slate-100 p-1 rounded-xl border border-slate-200">
           <button id="navPersonalBtn" onclick="switchView('personal')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-xs cursor-pointer flex items-center gap-1.5">
@@ -74,7 +51,7 @@
           </button>
         </div>
 
-        <button onclick="handleLogout()" class="px-3.5 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 text-xs font-semibold flex items-center gap-1.5 cursor-pointer">
+        <button id="logoutBtn" class="px-3.5 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 text-xs font-semibold flex items-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-right-from-bracket"></i>
           <span>Шығу</span>
         </button>
@@ -84,16 +61,16 @@
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
 
-    <!-- 1. ЖЕКЕ ҚОРЫМ (PERSONAL) -->
+    <!-- 1. ЖЕКЕ ҚОРЫМ -->
     <div id="viewPersonal">
       <div class="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-xs mb-8">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold mb-2 border border-emerald-200">
-              <i class="fa-solid fa-shield-halved"></i> 100% Оқшауланған жеке қор
+              <i class="fa-solid fa-shield-halved"></i> 100% Оқшауланған жеке қор (Firestore)
             </div>
             <h2 class="text-2xl font-bold text-slate-900">Менің жеке сабақтарым мен құжаттарым</h2>
-            <p class="text-xs text-slate-500 mt-1">Тек сіз салған файлдар. Басқа қолданушыларға мүлдем көрінбейді.</p>
+            <p class="text-xs text-slate-500 mt-1">Тек сіздің UID-іңізге бекітілген файлдар.</p>
           </div>
           <div>
             <button onclick="openAddModal(null)" class="px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md cursor-pointer">
@@ -108,19 +85,18 @@
       </div>
     </div>
 
-    <!-- 2. ТОПТЫҚ ҚОРЛАР (GROUPS) -->
+    <!-- 2. ТОПТЫҚ ҚОРЛАР -->
     <div id="viewGroups" class="hidden">
-      <!-- 2.1 Топтар каталогы -->
       <div id="groupsDirectory">
         <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-md mb-8">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 text-xs font-semibold mb-2 border border-blue-400/30">
-                <i class="fa-solid fa-users"></i> Бірлескен дерекқор
+                <i class="fa-solid fa-users"></i> Бірлескен Firestore дерекқоры
               </div>
               <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Топтық ортақ қорлар</h2>
               <p class="text-xs sm:text-sm text-blue-200/80 mt-1.5 max-w-2xl">
-                Мұғалімдерді email арқылы топқа қосып, олардың презентацияларын осы топтан көріп, жүктей аласыз!
+                Мұғалімдерді Email арқылы топқа қосып, олардың презентацияларын осы топтан көріп, жүктей аласыз!
               </p>
             </div>
             <div class="flex items-center gap-2.5">
@@ -139,7 +115,7 @@
         </div>
       </div>
 
-      <!-- 2.2 Бір топтың іші -->
+      <!-- БІР ТОПТЫҢ ІШІ (Мүшелер бойынша сүзу) -->
       <div id="groupDetailsView" class="hidden">
         <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs mb-6">
           <div class="flex items-center justify-between mb-4">
@@ -148,7 +124,7 @@
             </button>
             <div class="flex items-center gap-2 flex-wrap">
               <button onclick="openAddMemberEmailModal()" class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
-                <i class="fa-solid fa-user-plus"></i> Email-мен адам қосу
+                <i class="fa-solid fa-user-plus"></i> Email арқылы адам қосу
               </button>
               <button onclick="shareActiveGroup()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer">
                 <i class="fa-solid fa-share-nodes text-blue-300"></i> Бөлісу
@@ -162,9 +138,9 @@
           <h2 id="activeGroupName" class="text-2xl font-black text-slate-900">Топ</h2>
           <p id="activeGroupDesc" class="text-xs text-slate-600 mt-1">Сипаттама</p>
 
-          <!-- МҮШЕЛЕР ЖОЛАҒЫ (Адамды таңдап соның материалдарын көру) -->
+          <!-- МҮШЕЛЕРДІ ТАҢДАУ БАТЫРМАЛАРЫ -->
           <div class="mt-4 pt-4 border-t border-slate-100">
-            <span class="text-xs font-bold text-slate-700 block mb-2">Мүшелер бойынша сүзу:</span>
+            <span class="text-xs font-bold text-slate-700 block mb-2">Мүшелер бойынша сүзу (осы мұғалімнің материалдары):</span>
             <div id="groupMembersBar" class="flex items-center gap-2 flex-wrap"></div>
           </div>
         </div>
@@ -173,64 +149,58 @@
       </div>
     </div>
 
-    <!-- 3. БАС ӘКІМШІ ПАНЕЛІ (SUPER ADMIN: БАРЛЫҚ ПАЙДАЛАНУШЫЛАРДЫҢ ФАЙЛДАРЫ) -->
+    <!-- 3. БАС ӘКІМШІ (SUPER ADMIN: БАРЛЫҚ ҚОЛДАНУШЫЛАРДЫҢ ФАЙЛДАРЫ) -->
     <div id="viewAdmin" class="hidden">
       <div class="rounded-3xl bg-gradient-to-r from-amber-950 via-slate-950 to-indigo-950 text-white p-6 sm:p-8 shadow-xl mb-8 border border-amber-500/20">
         <div class="flex items-center gap-2 mb-2">
           <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-400/30">
-            <i class="fa-solid fa-crown text-amber-400 mr-1"></i> Бас Әкімші (Super Admin)
+            <i class="fa-solid fa-crown text-amber-400 mr-1"></i> Бас Әкімші (Super Admin - temirzhanmerei06@gmail.com)
           </span>
         </div>
-        <h2 class="text-2xl sm:text-3xl font-black text-white">Барлық пайдаланушылардың файлдары мен дерекқоры</h2>
+        <h2 class="text-2xl sm:text-3xl font-black text-white">Барлық пайдаланушылардың файлдары мен Firestore қоры</h2>
         <p class="text-xs sm:text-sm text-amber-100/70 mt-1 max-w-2xl">
-          Бұл функция тек сізге көрінеді. Жүйедегі кез келген мұғалімнің салған құжаттарын, презентацияларын ашып, жүктеп немесе басқара аласыз.
+          Бұл функция тек сізге көрінеді. Firestore-дағы барлық қолданушылардың материалдарын көріп, ашып немесе өшіре аласыз.
         </p>
 
-        <!-- Статистика -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/10">
           <div class="bg-white/5 p-3.5 rounded-2xl border border-white/10">
             <span class="text-[10px] uppercase text-amber-200/70 block font-semibold">Барлық файлдар</span>
             <span id="adminTotalMats" class="text-2xl font-black text-white">0</span>
           </div>
           <div class="bg-white/5 p-3.5 rounded-2xl border border-white/10">
-            <span class="text-[10px] uppercase text-emerald-200/70 block font-semibold">Құжаттар (Word/PPT)</span>
+            <span class="text-[10px] uppercase text-emerald-200/70 block font-semibold">Құжат файлдары</span>
             <span id="adminTotalFiles" class="text-2xl font-black text-emerald-300">0</span>
           </div>
           <div class="bg-white/5 p-3.5 rounded-2xl border border-white/10">
-            <span class="text-[10px] uppercase text-blue-200/70 block font-semibold">Қолданушылар</span>
-            <span id="adminTotalUsers" class="text-2xl font-black text-blue-300">0</span>
+            <span class="text-[10px] uppercase text-blue-200/70 block font-semibold">Презентациялар</span>
+            <span id="adminTotalPres" class="text-2xl font-black text-blue-300">0</span>
           </div>
           <div class="bg-white/5 p-3.5 rounded-2xl border border-white/10">
-            <span class="text-[10px] uppercase text-purple-200/70 block font-semibold">Ортақ топтар</span>
-            <span id="adminTotalGroups" class="text-2xl font-black text-purple-300">0</span>
+            <span class="text-[10px] uppercase text-purple-200/70 block font-semibold">Авторлар саны</span>
+            <span id="adminTotalAuthors" class="text-2xl font-black text-purple-300">0</span>
           </div>
         </div>
       </div>
 
-      <!-- Админ іздеу -->
       <div class="mb-6">
-        <input type="text" id="adminSearchInput" oninput="filterAdminMaterials()" placeholder="Файл атауы, пән немесе автордың аты/поштасы бойынша іздеу..." class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs sm:text-sm bg-white focus:outline-none focus:border-amber-500 shadow-xs" />
+        <input type="text" id="adminSearchInput" placeholder="Тақырып немесе автордың поштасы бойынша іздеу..." class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs sm:text-sm bg-white focus:outline-none focus:border-amber-500 shadow-xs" />
       </div>
 
-      <!-- Барлық қолданушылардың файлдары карточкалары -->
-      <div id="adminMaterialsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <div class="col-span-full text-center py-10 text-slate-400 text-sm">Барлық файлдар жүктелуде...</div>
-      </div>
+      <div id="adminMaterialsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
     </div>
   </main>
 
-  <!-- МОДАЛЬДАР -->
-  <!-- 1. Поштамен адам қосу модалі -->
+  <!-- Поштамен адам қосу модалі -->
   <div id="addMemberEmailModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 border border-slate-200 shadow-2xl">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="text-lg font-bold text-slate-900">Электрондық поштамен қосу</h3>
+        <h3 class="text-lg font-bold text-slate-900">Электрондық поштамен топқа қосу</h3>
         <button onclick="closeAddMemberEmailModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
       </div>
-      <p class="text-xs text-slate-500 mb-4">Адамның поштасын жазыңыз. Ол топқа қосылып, барлық материалдары көрінеді.</p>
-      <form onsubmit="submitAddMemberEmail(event)" class="space-y-4">
+      <p class="text-xs text-slate-500 mb-4">Адамның поштасын жазыңыз. Ол топ мүшесі атанып, құжаттары осы топта көрінеді.</p>
+      <form id="inviteEmailForm" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Email *</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Мұғалімнің Email адресі *</label>
           <input type="email" id="inviteEmailInput" required placeholder="ustaz@gmail.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-indigo-600" />
         </div>
         <button type="submit" id="inviteBtn" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md cursor-pointer">
@@ -240,32 +210,31 @@
     </div>
   </div>
 
-  <!-- 2. Жаңа топ құру модалі -->
+  <!-- Модальдар (Құру, Кодпен кіру, Материал қосу) -->
   <div id="createGroupModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 border border-slate-200 shadow-2xl">
       <div class="flex items-center justify-between mb-2">
         <h3 class="text-lg font-bold text-slate-900">Жаңа топ құру</h3>
         <button onclick="closeCreateGroupModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
       </div>
-      <form onsubmit="submitCreateGroup(event)" class="space-y-3.5">
+      <form id="createGroupForm" class="space-y-3.5">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Топ атауы *</label>
-          <input type="text" id="groupNameInput" required placeholder="Информатика бірлестігі" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm" />
+          <input type="text" id="groupNameInput" required placeholder="Информатика пәні мұғалімдері" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm" />
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Сипаттамасы</label>
-          <textarea id="groupDescInput" rows="2" placeholder="Ортақ сабақтар қоры" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"></textarea>
+          <textarea id="groupDescInput" rows="2" placeholder="Ортақ презентациялар базасы" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"></textarea>
         </div>
         <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs">Құру</button>
       </form>
     </div>
   </div>
 
-  <!-- 3. Кодпен қосылу модалі -->
   <div id="joinModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 border border-slate-200 shadow-2xl text-center">
       <h3 class="text-base font-bold text-slate-900 mb-2">Кодпен топқа қосылу</h3>
-      <form onsubmit="submitJoinGroup(event)" class="space-y-3">
+      <form id="joinGroupForm" class="space-y-3">
         <input type="text" id="joinCodeInput" required placeholder="GRP-XXXX" uppercase class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-200 text-center font-mono font-bold uppercase tracking-wider" />
         <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs">Қосылу</button>
         <button type="button" onclick="closeJoinModal()" class="w-full py-2 rounded-xl bg-slate-100 text-slate-600 text-xs">Жабу</button>
@@ -273,17 +242,16 @@
     </div>
   </div>
 
-  <!-- 4. Материал қосу модалі -->
   <div id="addModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 border border-slate-200 shadow-2xl">
       <div class="flex items-center justify-between mb-2">
         <h3 class="text-lg font-bold text-slate-900">Материал / Презентация қосу</h3>
         <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
       </div>
-      <form onsubmit="submitMaterial(event)" class="space-y-3.5">
+      <form id="addMaterialForm" class="space-y-3.5">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Тақырыбы *</label>
-          <input type="text" id="matTitle" required placeholder="9-сынып. Жасанды интеллект" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm" />
+          <input type="text" id="matTitle" required placeholder="9-сынып. Жасанды интеллект негіздері" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm" />
         </div>
         <div class="grid grid-cols-3 gap-2">
           <div>
@@ -321,39 +289,81 @@
         </div>
 
         <button type="submit" id="matSubmitBtn" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm">
-          Сақтау
+          Firestore-ға сақтау
         </button>
       </form>
     </div>
   </div>
 
-  <!-- JAVASCRIPT ЛОГИКАСЫ -->
-  <script>
-    let currentView = 'personal';
+  <!-- Firebase Modular SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      collection, 
+      addDoc, 
+      getDoc, 
+      getDocs, 
+      updateDoc, 
+      deleteDoc, 
+      query, 
+      where, 
+      onSnapshot, 
+      arrayUnion, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      projectId: "sabaktar-bazasy",
+      appId: "1:659458804570:web:ab9d14e008afc86cf28163",
+      apiKey: "AIzaSyBsG8TJJDtbcfdRjXXUsHEXDtW62zCZo4Y",
+      authDomain: "sabaktar-bazasy.firebaseapp.com",
+      firestoreDatabaseId: "ai-studio-qr-fb4cebab-7d66-428f-b60e-a0e1f6d61b02",
+      storageBucket: "sabaktar-bazasy.firebasestorage.app",
+      messagingSenderId: "659458804570"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, "ai-studio-qr-fb4cebab-7d66-428f-b60e-a0e1f6d61b02");
+
+    let currentUser = null;
+    let isAdmin = false;
     let personalMaterials = [];
     let userGroups = [];
     let currentGroupId = null;
+    let currentGroupData = null;
     let groupMaterials = [];
-    let groupMembers = [];
-    let selectedMemberId = null;
+    let selectedMemberEmail = null;
     let allAdminMaterials = [];
 
-    // Бастапқы іске қосу
-    document.addEventListener("DOMContentLoaded", () => {
-      if (currentUser) {
-        document.getElementById("userStatusLine").innerHTML = `Қолданушы: <strong class="text-slate-800">${escapeHtml(currentUser.name || currentUser.email)}</strong> (${escapeHtml(currentUser.email)})`;
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "auth.html";
+        return;
       }
+      currentUser = user;
+      isAdmin = (user.email && user.email.toLowerCase() === 'temirzhanmerei06@gmail.com');
+
+      document.getElementById("userStatusLine").innerHTML = `Қолданушы: <strong class="text-slate-800">${escapeHtml(user.displayName || user.email.split('@')[0])}</strong> (${escapeHtml(user.email)})`;
+
       if (isAdmin) {
         document.getElementById("adminBadge").classList.remove("hidden");
         document.getElementById("navAdminBtn").classList.remove("hidden");
       }
 
-      loadPersonalMaterials();
-      loadUserGroups();
+      listenPersonalMaterials();
+      listenUserGroups();
     });
 
-    function switchView(view) {
-      currentView = view;
+    document.getElementById("logoutBtn").onclick = async () => {
+      await signOut(auth);
+      window.location.href = "auth.html";
+    };
+
+    window.switchView = function(view) {
       document.getElementById("viewPersonal").classList.toggle("hidden", view !== 'personal');
       document.getElementById("viewGroups").classList.toggle("hidden", view !== 'groups');
       document.getElementById("viewAdmin").classList.toggle("hidden", view !== 'admin');
@@ -367,29 +377,25 @@
         ? "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-500 text-white shadow-xs cursor-pointer flex items-center gap-1.5"
         : "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-amber-800 hover:text-amber-950 hover:bg-amber-100/60 cursor-pointer flex items-center gap-1.5";
 
-      if (view === 'personal') loadPersonalMaterials();
-      if (view === 'groups') loadUserGroups();
-      if (view === 'admin') loadAdminDashboard();
-    }
-
-    // Жеке материалдарды жүктеу
-    async function loadPersonalMaterials() {
-      try {
-        const res = await fetch(`${API_BASE}/materials?scope=personal`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
-        personalMaterials = data.materials || [];
-        renderPersonalGrid();
-      } catch (e) {
-        console.error(e);
+      if (view === 'admin' && isAdmin) {
+        listenAdminMaterials();
       }
+    };
+
+    function listenPersonalMaterials() {
+      if (!currentUser) return;
+      const q = query(collection(db, "materials"), where("uid", "==", currentUser.uid));
+      onSnapshot(q, (snapshot) => {
+        personalMaterials = [];
+        snapshot.forEach((doc) => personalMaterials.push({ id: doc.id, ...doc.data() }));
+        renderPersonalGrid();
+      });
     }
 
     function renderPersonalGrid() {
       const grid = document.getElementById("personalMaterialsGrid");
       if (personalMaterials.length === 0) {
-        grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 text-sm">Жеке қорда файлдар жоқ</div>';
+        grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 text-sm">Жеке қорда материалдар жоқ</div>';
         return;
       }
       grid.innerHTML = personalMaterials.map(m => `
@@ -400,29 +406,31 @@
               <span class="text-[11px] text-slate-500">${m.grade ? m.grade + '-сынып' : 'Барлығы'}</span>
             </div>
             <h4 class="font-bold text-slate-900 text-sm mb-1">${escapeHtml(m.title)}</h4>
-            <p class="text-xs text-slate-500 mb-3">${escapeHtml(m.subject || 'Информатика')}</p>
-            ${m.fileName ? `<div class="p-2 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-semibold mb-3 truncate"><i class="fa-solid fa-file mr-1"></i> ${escapeHtml(m.fileName)}</div>` : ''}
+            <p class="text-xs text-slate-500 mb-2">${escapeHtml(m.subject || 'Информатика')}</p>
+            ${m.fileName ? `<div class="p-2 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-semibold mb-3 truncate flex items-center gap-1.5"><i class="fa-solid fa-file-lines text-emerald-600"></i> ${escapeHtml(m.fileName)}</div>` : ''}
           </div>
-          <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-            ${m.fileData ? `<a href="${API_BASE}/materials/${m.id}/file?view=true" target="_blank" class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-semibold">Ашу</a>` : ''}
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+            ${m.fileData ? `<button onclick="openBase64File('${m.id}')" class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-semibold cursor-pointer">Ашу</button>` : ''}
             ${m.url ? `<a href="${escapeHtml(m.url)}" target="_blank" class="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-semibold">Сілтеме</a>` : ''}
+            <button onclick="deleteMaterial('${m.id}')" class="p-1.5 text-slate-400 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button>
           </div>
         </div>
       `).join('');
     }
 
-    // Топтарды жүктеу
-    async function loadUserGroups() {
-      try {
-        const res = await fetch(`${API_BASE}/groups`, {
-          headers: { "Authorization": `Bearer ${token}` }
+    function listenUserGroups() {
+      if (!currentUser) return;
+      onSnapshot(collection(db, "groups"), (snapshot) => {
+        userGroups = [];
+        const myEmail = currentUser.email.toLowerCase();
+        snapshot.forEach((doc) => {
+          const g = { id: doc.id, ...doc.data() };
+          if (g.ownerId === currentUser.uid || (g.memberEmails && g.memberEmails.includes(myEmail))) {
+            userGroups.push(g);
+          }
         });
-        const data = await res.json();
-        userGroups = data.groups || [];
         renderGroupsDirectory();
-      } catch (e) {
-        console.error(e);
-      }
+      });
     }
 
     function renderGroupsDirectory() {
@@ -436,10 +444,10 @@
           <div>
             <div class="flex items-center justify-between mb-2">
               <span class="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-mono text-xs font-bold">${g.shareCode}</span>
-              <span class="text-xs text-slate-500">${g.members?.length || 1} мүше</span>
+              <span class="text-xs text-slate-500">${g.memberEmails?.length || 1} мүше</span>
             </div>
             <h4 class="font-bold text-slate-900 text-base mb-1">${escapeHtml(g.name)}</h4>
-            <p class="text-xs text-slate-500 line-clamp-2 mb-4">${escapeHtml(g.description || '')}</p>
+            <p class="text-xs text-slate-500 line-clamp-2 mb-4">${escapeHtml(g.description || 'Ортақ қор')}</p>
           </div>
           <button onclick="openGroupDetails('${g.id}')" class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer">
             Ашу
@@ -448,70 +456,71 @@
       `).join('');
     }
 
-    async function openGroupDetails(groupId) {
+    window.openGroupDetails = function(groupId) {
       currentGroupId = groupId;
+      currentGroupData = userGroups.find(g => g.id === groupId);
       document.getElementById("groupsDirectory").classList.add("hidden");
       document.getElementById("groupDetailsView").classList.remove("hidden");
 
-      try {
-        const res = await fetch(`${API_BASE}/groups/${groupId}`);
-        const data = await res.json();
-        if (data.group) {
-          document.getElementById("activeGroupName").textContent = data.group.name;
-          document.getElementById("activeGroupDesc").textContent = data.group.description || 'Ортақ презентациялар базасы';
-          groupMaterials = data.materials || [];
-          groupMembers = data.group.members || [];
-          renderGroupMembersBar();
-          renderGroupMaterialsGrid();
-        }
-      } catch (e) {
-        console.error(e);
+      if (currentGroupData) {
+        document.getElementById("activeGroupName").textContent = currentGroupData.name;
+        document.getElementById("activeGroupDesc").textContent = currentGroupData.description || 'Ортақ қор';
+        renderGroupMembersBar();
       }
-    }
 
-    function backToGroupsDir() {
+      onSnapshot(query(collection(db, "materials"), where("groupId", "==", groupId)), (snap) => {
+        groupMaterials = [];
+        snap.forEach(d => groupMaterials.push({ id: d.id, ...d.data() }));
+        renderGroupMaterialsGrid();
+      });
+    };
+
+    window.backToGroupsDir = function() {
       currentGroupId = null;
-      selectedMemberId = null;
+      selectedMemberEmail = null;
       document.getElementById("groupDetailsView").classList.add("hidden");
       document.getElementById("groupsDirectory").classList.remove("hidden");
-      loadUserGroups();
-    }
+    };
 
-    // Мүшелер сүзгісі
     function renderGroupMembersBar() {
       const bar = document.getElementById("groupMembersBar");
+      if (!currentGroupData || !currentGroupData.memberEmails) return;
+
       let html = `
-        <button onclick="filterByGroupMember(null)" class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer ${selectedMemberId === null ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}">
-          Барлық мүшелер (${groupMembers.length})
+        <button onclick="filterByGroupMember(null)" class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer ${selectedMemberEmail === null ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}">
+          Барлық мүшелер (${currentGroupData.memberEmails.length})
         </button>
       `;
-      groupMembers.forEach(m => {
-        const isActive = selectedMemberId === m.userId;
+
+      currentGroupData.memberEmails.forEach(email => {
+        const isActive = (selectedMemberEmail === email);
         html += `
-          <button onclick="filterByGroupMember('${m.userId}')" class="px-3 py-1.5 rounded-xl text-xs font-medium cursor-pointer flex items-center gap-1.5 ${isActive ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-700'}">
-            <span>${escapeHtml(m.name || m.email)}</span>
+          <button onclick="filterByGroupMember('${email}')" class="px-3 py-1.5 rounded-xl text-xs font-medium cursor-pointer flex items-center gap-1.5 ${isActive ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-700'}">
+            <span>${escapeHtml(email)}</span>
           </button>
         `;
       });
       bar.innerHTML = html;
     }
 
-    function filterByGroupMember(userId) {
-      selectedMemberId = userId;
+    window.filterByGroupMember = function(email) {
+      selectedMemberEmail = email;
       renderGroupMembersBar();
       renderGroupMaterialsGrid();
-    }
+    };
 
     function renderGroupMaterialsGrid() {
       const grid = document.getElementById("groupMaterialsGrid");
       let list = groupMaterials;
-      if (selectedMemberId) {
-        list = list.filter(m => m.userId === selectedMemberId);
+      if (selectedMemberEmail) {
+        list = list.filter(m => (m.email && m.email.toLowerCase() === selectedMemberEmail.toLowerCase()));
       }
+
       if (list.length === 0) {
-        grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 text-sm">Бұл қолданушының презентациялары жоқ</div>';
+        grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 text-sm">Бұл мүшенің презентациялары жоқ</div>';
         return;
       }
+
       grid.innerHTML = list.map(m => `
         <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col justify-between shadow-xs">
           <div>
@@ -520,81 +529,55 @@
               <span class="text-[11px] text-slate-500">${m.grade ? m.grade + '-сынып' : 'Барлығы'}</span>
             </div>
             <h4 class="font-bold text-slate-900 text-sm mb-1">${escapeHtml(m.title)}</h4>
-            <p class="text-xs text-slate-500 mb-1">Автор: <strong>${escapeHtml(m.authorName || m.authorEmail || 'Мұғалім')}</strong></p>
-            ${m.fileName ? `<div class="p-2 rounded-xl bg-blue-50 text-blue-800 text-xs font-semibold my-2 truncate"><i class="fa-solid fa-file mr-1"></i> ${escapeHtml(m.fileName)}</div>` : ''}
+            <p class="text-xs text-slate-500 mb-2">Автор: <strong>${escapeHtml(m.authorName || m.email || 'Мұғалім')}</strong></p>
+            ${m.fileName ? `<div class="p-2 rounded-xl bg-blue-50 text-blue-800 text-xs font-semibold mb-3 truncate flex items-center gap-1.5"><i class="fa-solid fa-file-powerpoint text-blue-600"></i> ${escapeHtml(m.fileName)}</div>` : ''}
           </div>
-          <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-            ${m.fileData ? `<a href="${API_BASE}/materials/${m.id}/file?view=true" target="_blank" class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-semibold">Ашу</a>` : ''}
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+            ${m.fileData ? `<button onclick="openBase64File('${m.id}')" class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-semibold cursor-pointer">Ашу</button>` : ''}
             ${m.url ? `<a href="${escapeHtml(m.url)}" target="_blank" class="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-semibold">Сілтеме</a>` : ''}
           </div>
         </div>
       `).join('');
     }
 
-    // Email арқылы адам қосу
-    function openAddMemberEmailModal() {
-      document.getElementById("addMemberEmailModal").classList.remove("hidden");
-    }
-    function closeAddMemberEmailModal() {
-      document.getElementById("addMemberEmailModal").classList.add("hidden");
-    }
-    async function submitAddMemberEmail(e) {
+    // EMAIL АРҚЫЛЫ АДАМ ҚОСУ (FIRESTORE)
+    document.getElementById("inviteEmailForm").onsubmit = async (e) => {
       e.preventDefault();
-      const email = document.getElementById("inviteEmailInput").value.trim();
-      const btn = document.getElementById("inviteBtn");
-      btn.disabled = true;
+      const email = document.getElementById("inviteEmailInput").value.trim().toLowerCase();
       try {
-        const res = await fetch(`${API_BASE}/groups/${currentGroupId}/members/email`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ email })
+        await updateDoc(doc(db, "groups", currentGroupId), {
+          memberEmails: arrayUnion(email)
         });
-        const data = await res.json();
-        if (res.ok) {
-          alert(`Қолданушы (${email}) топқа сәтті қосылды!`);
-          closeAddMemberEmailModal();
-          openGroupDetails(currentGroupId);
-        } else {
-          alert("Қате: " + data.error);
-        }
-      } catch (err) {
-        alert("Байланыс үзілді");
-      } finally {
-        btn.disabled = false;
-      }
-    }
+        alert(`Қолданушы (${email}) топқа сәтті қосылды!`);
+        closeAddMemberEmailModal();
+      } catch (err) { alert("Қате: " + err.message); }
+    };
 
-    // 3. БАС ӘКІМШІ (SUPER ADMIN) ФУНКЦИЯЛАРЫ
-    async function loadAdminDashboard() {
+    // БАС ӘКІМШІ (SUPER ADMIN: БАРЛЫҚ МАТЕРИАЛДАРДЫ FIRESTORE-ДАН АЛУ)
+    function listenAdminMaterials() {
       if (!isAdmin) return;
-      try {
-        const res = await fetch(`${API_BASE}/admin/all-materials`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (data.materials) {
-          allAdminMaterials = data.materials;
-          document.getElementById("adminTotalMats").textContent = data.stats?.totalMaterials || allAdminMaterials.length;
-          document.getElementById("adminTotalFiles").textContent = data.stats?.totalFiles || 0;
-          document.getElementById("adminTotalUsers").textContent = data.stats?.totalUsers || 0;
-          document.getElementById("adminTotalGroups").textContent = data.stats?.totalGroups || 0;
-          filterAdminMaterials();
-        }
-      } catch (e) {
-        console.error(e);
-      }
+      onSnapshot(collection(db, "materials"), (snapshot) => {
+        allAdminMaterials = [];
+        snapshot.forEach(d => allAdminMaterials.push({ id: d.id, ...d.data() }));
+
+        document.getElementById("adminTotalMats").textContent = allAdminMaterials.length;
+        document.getElementById("adminTotalFiles").textContent = allAdminMaterials.filter(m => m.fileName).length;
+        document.getElementById("adminTotalPres").textContent = allAdminMaterials.filter(m => m.type === 'презентация').length;
+        document.getElementById("adminTotalAuthors").textContent = new Set(allAdminMaterials.map(m => m.email)).size;
+
+        renderAdminGrid(allAdminMaterials);
+      });
     }
 
-    function filterAdminMaterials() {
-      const q = (document.getElementById("adminSearchInput")?.value || "").toLowerCase();
+    document.getElementById("adminSearchInput").oninput = (e) => {
+      const q = e.target.value.toLowerCase().trim();
       const filtered = allAdminMaterials.filter(m => 
         (m.title || '').toLowerCase().includes(q) ||
         (m.authorName || '').toLowerCase().includes(q) ||
-        (m.authorEmail || '').toLowerCase().includes(q) ||
-        (m.subject || '').toLowerCase().includes(q)
+        (m.email || '').toLowerCase().includes(q)
       );
       renderAdminGrid(filtered);
-    }
+    };
 
     function renderAdminGrid(list) {
       const grid = document.getElementById("adminMaterialsGrid");
@@ -607,140 +590,115 @@
           <div>
             <div class="mb-2 p-2 rounded-xl bg-amber-50 text-amber-900 text-xs font-semibold flex items-center justify-between">
               <span>Автор: <strong>${escapeHtml(m.authorName || 'Мұғалім')}</strong></span>
-              <span class="text-[10px] text-slate-500 font-mono">${escapeHtml(m.authorEmail || '')}</span>
-            </div>
-            <div class="flex items-center justify-between mb-1">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100">${m.type}</span>
-              <span class="text-[11px] text-slate-500">${m.grade ? m.grade + '-сынып' : 'Барлығы'}</span>
+              <span class="text-[10px] text-slate-500 font-mono">${escapeHtml(m.email || '')}</span>
             </div>
             <h4 class="font-bold text-slate-900 text-sm mb-1">${escapeHtml(m.title)}</h4>
-            ${m.fileName ? `<div class="p-1.5 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-semibold mb-2 truncate">${escapeHtml(m.fileName)} (${m.fileSize || ''})</div>` : ''}
+            <p class="text-xs text-slate-500 mb-2">${escapeHtml(m.subject || 'Жалпы')}</p>
+            ${m.fileName ? `<div class="p-1.5 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-semibold mb-2 truncate">${escapeHtml(m.fileName)}</div>` : ''}
           </div>
-          <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-            ${m.fileData ? `<a href="${API_BASE}/materials/${m.id}/file?view=true" target="_blank" class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-semibold">Ашу</a>` : ''}
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+            ${m.fileData ? `<button onclick="openBase64File('${m.id}')" class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-semibold cursor-pointer">Ашу</button>` : ''}
             <button onclick="adminDelete('${m.id}')" class="p-2 text-slate-400 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button>
           </div>
         </div>
       `).join('');
     }
 
-    async function adminDelete(id) {
-      if (!confirm("Бас Әкімші ретінде бұл файлды өшіресіз бе?")) return;
-      try {
-        const res = await fetch(`${API_BASE}/admin/materials/${id}`, {
-          method: "DELETE",
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (res.ok) {
-          loadAdminDashboard();
-        } else {
-          alert("Өшіру қатесі");
-        }
-      } catch (e) {
-        alert("Қате");
-      }
-    }
+    window.adminDelete = async function(id) {
+      if (!confirm("Бас Әкімші құқығымен бұл файлды Firestore-дан өшіресіз бе?")) return;
+      try { await deleteDoc(doc(db, "materials", id)); } catch (e) { alert(e.message); }
+    };
 
-    // Модальдарды ашу/жабу
-    function openAddModal(groupId) {
-      window._targetGroupId = groupId;
-      document.getElementById("addModal").classList.remove("hidden");
-    }
-    function closeAddModal() {
-      document.getElementById("addModal").classList.add("hidden");
-    }
-    function openCreateGroupModal() {
-      document.getElementById("createGroupModal").classList.remove("hidden");
-    }
-    function closeCreateGroupModal() {
-      document.getElementById("createGroupModal").classList.add("hidden");
-    }
-    function openJoinModal() {
-      document.getElementById("joinModal").classList.remove("hidden");
-    }
-    function closeJoinModal() {
-      document.getElementById("joinModal").classList.add("hidden");
-    }
-    function handleLogout() {
-      localStorage.removeItem("sabak_token");
-      localStorage.removeItem("sabak_user");
-      window.location.href = "auth.html";
-    }
+    window.deleteMaterial = async function(id) {
+      if (!confirm("Өшіруді растайсыз ба?")) return;
+      try { await deleteDoc(doc(db, "materials", id)); } catch (e) { alert(e.message); }
+    };
 
-    async function submitMaterial(e) {
+    window.openBase64File = function(matId) {
+      const mat = personalMaterials.concat(groupMaterials, allAdminMaterials).find(m => m.id === matId);
+      if (!mat || !mat.fileData) return;
+      const win = window.open();
+      if (win) win.document.write(`<iframe src="${mat.fileData}" frameborder="0" style="border:0; top:0; left:0; bottom:0; right:0; width:100%; height:100%;" allowfullscreen></iframe>`);
+    };
+
+    // ТОП ҚҰРУ
+    document.getElementById("createGroupForm").onsubmit = async (e) => {
       e.preventDefault();
-      const title = document.getElementById("matTitle").value.trim();
-      const type = document.getElementById("matType").value;
-      const grade = document.getElementById("matGrade").value;
-      const subject = document.getElementById("matSubject").value.trim();
-      const url = document.getElementById("matUrl").value.trim();
-      const fileInput = document.getElementById("matFileInput");
+      try {
+        const docRef = await addDoc(collection(db, "groups"), {
+          name: document.getElementById("groupNameInput").value.trim(),
+          description: document.getElementById("groupDescInput").value.trim(),
+          ownerId: currentUser.uid,
+          ownerEmail: currentUser.email.toLowerCase(),
+          ownerName: currentUser.displayName || currentUser.email.split('@')[0],
+          shareCode: 'GRP-' + Math.random().toString(36).substring(2, 6).toUpperCase(),
+          isPublicView: true,
+          memberEmails: [currentUser.email.toLowerCase()],
+          createdAt: serverTimestamp()
+        });
+        closeCreateGroupModal();
+        openGroupDetails(docRef.id);
+      } catch (err) { alert(err.message); }
+    };
 
-      let fileData = undefined, fileName = undefined, fileSize = undefined;
+    // КОДПЕН ҚОСЫЛУ
+    document.getElementById("joinGroupForm").onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        const q = query(collection(db, "groups"), where("shareCode", "==", document.getElementById("joinCodeInput").value.trim().toUpperCase()));
+        const snap = await getDocs(q);
+        if (snap.empty) { alert("Код табылмады!"); return; }
+        await updateDoc(doc(db, "groups", snap.docs[0].id), {
+          memberEmails: arrayUnion(currentUser.email.toLowerCase())
+        });
+        closeJoinModal();
+        openGroupDetails(snap.docs[0].id);
+      } catch (err) { alert(err.message); }
+    };
+
+    // МАТЕРИАЛ ҚОСУ (FIRESTORE)
+    document.getElementById("addMaterialForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById("matFileInput");
+      let fileName = "", fileSize = "", fileData = "";
+
       if (fileInput.files.length > 0) {
         const f = fileInput.files[0];
         fileName = f.name;
         fileSize = (f.size / (1024 * 1024)).toFixed(2) + " MB";
-        fileData = await new Promise(resolve => {
+        fileData = await new Promise((res) => {
           const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
+          reader.onload = () => res(reader.result);
           reader.readAsDataURL(f);
         });
       }
 
       try {
-        const res = await fetch(`${API_BASE}/materials`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({
-            title, type, grade, subject, url, fileData, fileName, fileSize,
-            groupId: window._targetGroupId || undefined
-          })
+        await addDoc(collection(db, "materials"), {
+          title: document.getElementById("matTitle").value.trim(),
+          type: document.getElementById("matType").value,
+          grade: document.getElementById("matGrade").value,
+          subject: document.getElementById("matSubject").value.trim(),
+          url: document.getElementById("matUrl").value.trim(),
+          fileName, fileSize, fileData,
+          groupId: window._targetGroupId || null,
+          uid: currentUser.uid,
+          email: currentUser.email.toLowerCase(),
+          authorName: currentUser.displayName || currentUser.email.split('@')[0],
+          createdAt: serverTimestamp()
         });
-        if (res.ok) {
-          closeAddModal();
-          if (window._targetGroupId) openGroupDetails(window._targetGroupId);
-          else loadPersonalMaterials();
-        } else {
-          alert("Сақтау қатесі");
-        }
-      } catch (err) {
-        alert("Байланыс үзілді");
-      }
-    }
+        closeAddModal();
+      } catch (err) { alert("Сақтау қатесі: " + err.message); }
+    };
 
-    async function submitCreateGroup(e) {
-      e.preventDefault();
-      const name = document.getElementById("groupNameInput").value.trim();
-      const description = document.getElementById("groupDescInput").value.trim();
-      try {
-        const res = await fetch(`${API_BASE}/groups`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ name, description })
-        });
-        if (res.ok) {
-          closeCreateGroupModal();
-          loadUserGroups();
-        }
-      } catch (e) { alert("Қате"); }
-    }
-
-    async function submitJoinGroup(e) {
-      e.preventDefault();
-      const shareCode = document.getElementById("joinCodeInput").value.trim();
-      try {
-        const res = await fetch(`${API_BASE}/groups/join`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ shareCode })
-        });
-        if (res.ok) {
-          closeJoinModal();
-          loadUserGroups();
-        } else { alert("Код табылмады"); }
-      } catch (e) { alert("Қате"); }
-    }
+    window.openAddMemberEmailModal = () => document.getElementById("addMemberEmailModal").classList.remove("hidden");
+    window.closeAddMemberEmailModal = () => document.getElementById("addMemberEmailModal").classList.add("hidden");
+    window.openCreateGroupModal = () => document.getElementById("createGroupModal").classList.remove("hidden");
+    window.closeCreateGroupModal = () => document.getElementById("createGroupModal").classList.add("hidden");
+    window.openJoinModal = () => document.getElementById("joinModal").classList.remove("hidden");
+    window.closeJoinModal = () => document.getElementById("joinModal").classList.add("hidden");
+    window.openAddModal = (grpId) => { window._targetGroupId = grpId; document.getElementById("addModal").classList.remove("hidden"); };
+    window.closeAddModal = () => document.getElementById("addModal").classList.add("hidden");
 
     function escapeHtml(t) {
       if (!t) return "";
