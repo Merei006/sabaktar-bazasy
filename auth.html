@@ -9,11 +9,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    #loginQrCode img, #loginQrCode canvas { border-radius: 12px; margin: 0 auto; }
+    #loginQrCode img, #loginQrCode canvas { border-radius: 12px; margin: 0 auto; display: block; }
   </style>
 </head>
 <body class="bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50/40 min-h-screen text-slate-900 flex flex-col justify-between p-4 sm:p-6">
 
+  <!-- Жоғарғы статус жолағы -->
   <header class="max-w-4xl mx-auto w-full flex items-center justify-between py-2 mb-4">
     <div class="flex items-center gap-2.5">
       <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
@@ -32,26 +33,43 @@
     </div>
   </header>
 
-  <main class="max-w-md mx-auto w-full bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-8">
+  <!-- Телефоннан QR сканерлеп ашқан кездегі растау терезесі (?pair=... немесе #pair=...) -->
+  <div id="mobileConfirmCard" class="hidden max-w-sm mx-auto my-auto w-full bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 text-center">
+    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-xl">
+      <i class="fa-solid fa-mobile-screen"></i>
+    </div>
+    <h2 class="text-lg font-bold text-slate-900 mb-1">Компьютерге кіруді растау</h2>
+    <p class="text-xs text-slate-500 mb-5">Компьютер экранындағы Сабақтар базасына кіруге рұқсат бересіз бе?</p>
+    <div id="mobileAuthStatus" class="space-y-3 text-left">
+      <div class="text-center text-xs text-slate-400 py-4">
+        <i class="fa-solid fa-spinner fa-spin mr-1"></i> Тексерілуде...
+      </div>
+    </div>
+  </div>
+
+  <!-- Негізгі форма карточкасы -->
+  <main id="mainAuthCard" class="max-w-md mx-auto w-full bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-8">
     
+    <!-- Тіл және свичер -->
     <div class="flex bg-slate-100 p-1 rounded-xl mb-6">
-      <button id="tabLoginBtn" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-xs transition-all cursor-pointer">
+      <button type="button" id="tabLoginBtn" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-xs transition-all cursor-pointer">
         Кіру
       </button>
-      <button id="tabRegisterBtn" class="flex-1 py-2 text-xs font-medium text-slate-600 rounded-lg hover:text-slate-900 transition-all cursor-pointer">
+      <button type="button" id="tabRegisterBtn" class="flex-1 py-2 text-xs font-medium text-slate-600 rounded-lg hover:text-slate-900 transition-all cursor-pointer">
         Тіркелу
       </button>
-      <button id="tabQrBtn" class="flex-1 py-2 text-xs font-medium text-slate-600 rounded-lg hover:text-slate-900 transition-all cursor-pointer flex items-center justify-center gap-1">
+      <button type="button" id="tabQrBtn" class="flex-1 py-2 text-xs font-medium text-slate-600 rounded-lg hover:text-slate-900 transition-all cursor-pointer flex items-center justify-center gap-1">
         <i class="fa-solid fa-qrcode text-[10px]"></i>
         <span>QR код</span>
       </button>
     </div>
 
-    <!-- КІРУ -->
+    <!-- 1. КІРУ ФОРМАСЫ (LOGIN) -->
     <div id="formLogin">
       <h2 class="text-xl font-bold text-slate-900 mb-1">Жүйеге кіру</h2>
       <p class="text-xs text-slate-500 mb-5">Firebase тіркелгіңізбен немесе Google арқылы кіріңіз</p>
 
+      <!-- Google-мен жылдам кіру батырмасы -->
       <button type="button" id="googleLoginBtn" class="w-full py-2.5 px-4 mb-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-2.5 transition-all shadow-xs cursor-pointer">
         <svg class="w-4 h-4" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -61,6 +79,12 @@
         </svg>
         <span>Google аккаунтымен бір басумен кіру</span>
       </button>
+
+      <div class="relative flex py-2 items-center mb-3">
+        <div class="flex-grow border-t border-slate-200"></div>
+        <span class="flex-shrink mx-3 text-[11px] text-slate-400 font-medium">немесе email арқылы</span>
+        <div class="flex-grow border-t border-slate-200"></div>
+      </div>
 
       <form id="emailLoginForm" class="space-y-4">
         <div>
@@ -73,20 +97,20 @@
           <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-blue-600" />
         </div>
 
-        <button type="submit" id="loginBtn" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer">
-          Кіру
+        <button type="submit" id="loginBtn" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2">
+          <span>Кіру</span>
         </button>
       </form>
     </div>
 
-    <!-- ТІРКЕЛУ -->
+    <!-- 2. ТІРКЕЛУ ФОРМАСЫ (REGISTER) -->
     <div id="formRegister" class="hidden">
       <h2 class="text-xl font-bold text-slate-900 mb-1">Жаңа аккаунт ашу</h2>
       <p class="text-xs text-slate-500 mb-5">Firebase Authentication арқылы тіркелу</p>
 
       <form id="emailRegisterForm" class="space-y-3.5">
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Толық аты-жөніңіз *</label>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Толық аты-жөніңіз (Атыңыз) *</label>
           <input type="text" id="regName" required placeholder="Мерей Т." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-blue-600" />
         </div>
 
@@ -100,22 +124,65 @@
           <input type="password" id="regPassword" required minlength="6" placeholder="Кемінде 6 таңба" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-blue-600" />
         </div>
 
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Рөлі</label>
+            <select id="regRole" class="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-xs bg-white">
+              <option value="teacher">Мұғалім</option>
+              <option value="student">Оқушы</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Пән</label>
+            <input type="text" id="regSubject" value="Информатика" class="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-xs" />
+          </div>
+        </div>
+
         <button type="submit" id="regBtn" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer">
           Тіркелу
         </button>
       </form>
     </div>
 
-    <!-- QR КОД -->
+    <!-- 3. QR-КОДПЕН КІРУ (FIRESTORE QR SESSION) -->
     <div id="formQr" class="hidden text-center">
-      <h3 class="text-base font-bold text-slate-900 mb-2">Телефон камерасымен кіру</h3>
-      <div class="p-3 bg-slate-50 rounded-2xl border-2 border-slate-200 inline-block mb-3">
-        <div id="loginQrCode"></div>
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200 mb-2">
+        <i class="fa-solid fa-qrcode"></i> Firestore QR сессиясы
       </div>
-      <p class="text-xs text-slate-500">Таймер: <strong id="qrTimer" class="text-emerald-700 font-bold">120</strong> сек</p>
+      <h3 class="text-base font-bold text-slate-900">Телефон камерасымен кіру</h3>
+      <p class="text-xs text-slate-500 mb-4">Мына QR кодты телефоныңызбен сканерлеңіз</p>
+
+      <div class="relative p-3 bg-white rounded-2xl border-2 border-slate-200 inline-flex items-center justify-center mb-3 min-w-[206px] min-h-[206px] shadow-inner">
+        <div id="loginQrCode" class="w-[180px] h-[180px] flex items-center justify-center">
+          <span class="text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i> QR жасалуда...</span>
+        </div>
+
+        <div id="qrApprovedOverlay" class="hidden absolute inset-0 bg-white/95 rounded-2xl flex flex-col items-center justify-center p-4">
+          <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl mb-2">
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <p class="font-bold text-slate-900 text-sm">Сәтті расталды!</p>
+          <p class="text-xs text-slate-500 mt-0.5">База ашылуда...</p>
+        </div>
+      </div>
+
+      <div id="qrStatusMsg" class="text-[11px] text-slate-500 mb-2"></div>
+
+      <div class="flex items-center justify-center gap-4 text-xs text-slate-500">
+        <span>Таймер: <strong id="qrTimer" class="text-emerald-700 font-bold">120</strong> сек</span>
+        <button type="button" id="refreshQrBtn" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-1 cursor-pointer">
+          <i class="fa-solid fa-rotate-right text-[11px]"></i> Жаңарту
+        </button>
+      </div>
     </div>
   </main>
 
+  <footer class="text-center text-xs text-slate-400 py-4">
+    Сабақтар базасы • Firebase Firestore & Authentication
+  </footer>
+
+  <!-- Firebase Modular SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
     import { 
@@ -127,8 +194,15 @@
       GoogleAuthProvider, 
       onAuthStateChanged 
     } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import { 
+      getFirestore, 
+      doc, 
+      setDoc, 
+      onSnapshot, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
+    // Нақты Firebase конфигурациясы
     const firebaseConfig = {
       projectId: "sabaktar-bazasy",
       appId: "1:659458804570:web:ab9d14e008afc86cf28163",
@@ -143,42 +217,311 @@
     const auth = getAuth(app);
     const db = getFirestore(app, "ai-studio-qr-fb4cebab-7d66-428f-b60e-a0e1f6d61b02");
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        window.location.href = "index.html";
-      }
-    });
+    // 3-деңгейлі сенімді QR генераторы (Ешқашан бос қалмайды!)
+    async function renderReliableQr(container, text, size = 180) {
+      container.innerHTML = "";
 
+      // 1-әдіс: ESM qrcode кітапханасы (DataURL PNG)
+      try {
+        const mod = await import("https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm");
+        const qrLib = mod.default || mod;
+        if (qrLib && typeof qrLib.toDataURL === "function") {
+          const dataUrl = await qrLib.toDataURL(text, {
+            width: size,
+            margin: 1,
+            color: { dark: "#0f172a", light: "#ffffff" }
+          });
+          const img = document.createElement("img");
+          img.src = dataUrl;
+          img.alt = "QR Code";
+          img.width = size;
+          img.height = size;
+          img.className = "rounded-xl mx-auto";
+          container.appendChild(img);
+          return;
+        }
+      } catch (e) {
+        console.warn("ESM QR fallback:", e);
+      }
+
+      // 2-әдіс: Классикалық qrcodejs (cdnjs)
+      try {
+        if (typeof window.QRCode === "function") {
+          new window.QRCode(container, {
+            text: text,
+            width: size,
+            height: size,
+            colorDark: "#0f172a",
+            colorLight: "#ffffff"
+          });
+          return;
+        }
+      } catch (e) {
+        console.warn("qrcodejs fallback:", e);
+      }
+
+      // 3-әдіс: Тікелей QR API суреті (100% резервтік жол)
+      const fallbackImg = document.createElement("img");
+      fallbackImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
+      fallbackImg.alt = "QR Code";
+      fallbackImg.width = size;
+      fallbackImg.height = size;
+      fallbackImg.className = "rounded-xl mx-auto";
+      container.appendChild(fallbackImg);
+    }
+
+    // URL ішінен ?pair=... немесе #pair=... сессиясын тексеру (Телефоннан сканерлегенде)
+    function getPairSessionId() {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get("pair")) return searchParams.get("pair");
+      const hash = window.location.hash || "";
+      if (hash.includes("pair=")) {
+        const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
+        return hashParams.get("pair");
+      }
+      return null;
+    }
+
+    const pairSessionId = getPairSessionId();
+
+    if (pairSessionId) {
+      // ТЕЛЕФОННАН СКАНЕРЛЕНГЕН РАСТАУ РЕЖИМІ
+      document.getElementById("mainAuthCard").classList.add("hidden");
+      document.getElementById("mobileConfirmCard").classList.remove("hidden");
+      const statusBox = document.getElementById("mobileAuthStatus");
+
+      const approveComputerWithUser = async (user) => {
+        await setDoc(doc(db, "qr_sessions", pairSessionId), {
+          status: "approved",
+          userId: user.uid,
+          userEmail: user.email,
+          userName: user.displayName || user.email.split("@")[0],
+          approvedAt: serverTimestamp()
+        }, { merge: true });
+
+        statusBox.innerHTML = `
+          <div class="p-4 bg-emerald-100 text-emerald-800 rounded-2xl text-xs font-bold text-center">
+            <i class="fa-solid fa-circle-check text-base mr-1"></i>
+            Сәтті расталды! Компьютерде жеке базаңыз ашылды.
+          </div>
+        `;
+      };
+
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          statusBox.innerHTML = `
+            <div class="bg-emerald-50 p-3 rounded-2xl border border-emerald-200 mb-3">
+              <div class="text-[10px] font-bold text-emerald-800 uppercase">Қазіргі аккаунтыңыз:</div>
+              <div class="font-bold text-sm text-slate-900">${user.displayName || "Мұғалім"}</div>
+              <div class="text-xs text-slate-600">${user.email}</div>
+            </div>
+            <button id="approvePairBtn" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md cursor-pointer flex items-center justify-center gap-2">
+              <i class="fa-solid fa-check"></i> Компьютерге кіруді растау
+            </button>
+          `;
+          document.getElementById("approvePairBtn").onclick = async () => {
+            try {
+              await approveComputerWithUser(user);
+            } catch (err) {
+              alert("Растау қатесі: " + err.message);
+            }
+          };
+        } else {
+          statusBox.innerHTML = `
+            <p class="text-xs text-slate-600 mb-3 text-center">Компьютерді растау үшін телефонда аккаунтыңызға кіріңіз:</p>
+            <button type="button" id="mobileGoogleBtn" class="w-full py-2.5 px-3 mb-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer">
+              <i class="fa-brands fa-google text-blue-600"></i> Google-мен кіріп растау
+            </button>
+            <div class="space-y-2">
+              <input type="email" id="phoneEmail" placeholder="Email пошта" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs" />
+              <input type="password" id="phonePass" placeholder="Құпиясөз" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs" />
+              <button type="button" id="phoneLoginApproveBtn" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold cursor-pointer">
+                Кіру және Компьютерді растау
+              </button>
+            </div>
+          `;
+          document.getElementById("mobileGoogleBtn").onclick = async () => {
+            try {
+              const res = await signInWithPopup(auth, new GoogleAuthProvider());
+              await approveComputerWithUser(res.user);
+            } catch (err) {
+              alert("Google қатесі: " + err.message);
+            }
+          };
+          document.getElementById("phoneLoginApproveBtn").onclick = async () => {
+            const em = document.getElementById("phoneEmail").value.trim();
+            const pw = document.getElementById("phonePass").value;
+            try {
+              const uc = await signInWithEmailAndPassword(auth, em, pw);
+              await approveComputerWithUser(uc.user);
+            } catch (err) {
+              alert("Кіру қатесі: " + err.message);
+            }
+          };
+        }
+      });
+    } else {
+      // ҚАЛЫПТЫ КОМПЬЮТЕР РЕЖИМІ
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          localStorage.setItem("sabak_firebase_user", JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || user.email.split('@')[0],
+            photoURL: user.photoURL
+          }));
+          window.location.href = "index.html";
+        }
+      });
+    }
+
+    // Вкладкаларды ауыстыру
     window.switchTab = function(tab) {
       document.getElementById("formLogin").classList.toggle("hidden", tab !== 'login');
       document.getElementById("formRegister").classList.toggle("hidden", tab !== 'register');
       document.getElementById("formQr").classList.toggle("hidden", tab !== 'qr');
+
+      document.getElementById("tabLoginBtn").className = tab === 'login' 
+        ? "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-xs cursor-pointer" 
+        : "flex-1 py-2 text-xs font-medium text-slate-600 rounded-lg hover:text-slate-900 cursor-pointer";
+      
+      document.getElementById("tabRegisterBtn").className = tab === 'register' 
+        ? "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-xs cursor-pointer" 
+        : "flex-1 py-2 text-xs font-medium text-slate-600 rounded-lg hover:text-slate-900 cursor-pointer";
+
+      document.getElementById("tabQrBtn").className = tab === 'qr' 
+        ? "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-xs flex items-center justify-center gap-1 cursor-pointer" 
+        : "flex-1 py-2 text-xs font-medium text-slate-600 rounded-lg hover:text-slate-900 flex items-center justify-center gap-1 cursor-pointer";
+
+      if (tab === 'qr') startQrSession();
     };
 
     document.getElementById("tabLoginBtn").onclick = () => window.switchTab('login');
     document.getElementById("tabRegisterBtn").onclick = () => window.switchTab('register');
     document.getElementById("tabQrBtn").onclick = () => window.switchTab('qr');
+    document.getElementById("refreshQrBtn").onclick = () => startQrSession();
 
+    // Google арқылы кіру
     document.getElementById("googleLoginBtn").onclick = async () => {
       try {
-        await signInWithPopup(auth, new GoogleAuthProvider());
-      } catch (err) { alert(err.message); }
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+      } catch (err) {
+        alert("Google арқылы кіру қатесі: " + (err.message || 'Рұқсат берілмеді'));
+      }
     };
 
+    // Email арқылы кіру
     document.getElementById("emailLoginForm").onsubmit = async (e) => {
       e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const btn = document.getElementById("loginBtn");
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Firebase тексеруде...';
+
       try {
-        await signInWithEmailAndPassword(auth, document.getElementById("loginEmail").value.trim(), document.getElementById("loginPassword").value);
-      } catch (err) { alert("Кіру қатесі: " + err.message); }
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        alert("Кіру қатесі: " + (err.message.includes('auth/invalid-credential') ? 'Email немесе құпиясөз қате' : err.message));
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Кіру';
+      }
     };
 
+    // Тіркелу
     document.getElementById("emailRegisterForm").onsubmit = async (e) => {
       e.preventDefault();
+      const name = document.getElementById("regName").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPassword").value;
+      const btn = document.getElementById("regBtn");
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Firebase-ке тіркелуде...';
+
       try {
-        const cred = await createUserWithEmailAndPassword(auth, document.getElementById("regEmail").value.trim(), document.getElementById("regPassword").value);
-        await updateProfile(cred.user, { displayName: document.getElementById("regName").value.trim() });
-      } catch (err) { alert("Тіркелу қатесі: " + err.message); }
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCredential.user, { displayName: name });
+      } catch (err) {
+        alert("Тіркелу қатесі: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Тіркелу';
+      }
     };
+
+    // QR код сессиясы (алдымен QR салынады, сосын Firestore бақыланады)
+    let qrTimerInterval = null;
+    let unsubscribeQr = null;
+
+    async function startQrSession() {
+      const sessionId = 'qr_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 8);
+      const container = document.getElementById("loginQrCode");
+      const statusMsg = document.getElementById("qrStatusMsg");
+      const overlay = document.getElementById("qrApprovedOverlay");
+      overlay.classList.add("hidden");
+      statusMsg.textContent = "Телефоннан сканерлеу күтілуде...";
+      statusMsg.className = "text-[11px] text-slate-500 mb-2";
+
+      // 1. Сілтемені жасап, QR-кодты БІРДЕН экранға шығару (күтусіз!)
+      const pairUrl = `${window.location.origin}${window.location.pathname}?pair=${sessionId}`;
+      await renderReliableQr(container, pairUrl, 180);
+
+      // 2. Таймерді қосу
+      let left = 120;
+      document.getElementById("qrTimer").textContent = left;
+      if (qrTimerInterval) clearInterval(qrTimerInterval);
+      qrTimerInterval = setInterval(() => {
+        left--;
+        document.getElementById("qrTimer").textContent = left;
+        if (left <= 0) {
+          clearInterval(qrTimerInterval);
+          if (unsubscribeQr) unsubscribeQr();
+          statusMsg.textContent = "QR-код мерзімі бітті. «Жаңарту» батырмасын басыңыз.";
+          statusMsg.className = "text-[11px] text-amber-600 font-semibold mb-2";
+        }
+      }, 1000);
+
+      // 3. Firestore-да сессия ашып, телефоннан растауды тыңдау
+      try {
+        const sessionRef = doc(db, "qr_sessions", sessionId);
+        await setDoc(sessionRef, {
+          status: 'pending',
+          createdAt: serverTimestamp()
+        });
+
+        if (unsubscribeQr) unsubscribeQr();
+        unsubscribeQr = onSnapshot(sessionRef, (snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data.status === 'approved' && data.userEmail) {
+              if (unsubscribeQr) unsubscribeQr();
+              if (qrTimerInterval) clearInterval(qrTimerInterval);
+              overlay.classList.remove("hidden");
+              localStorage.setItem("sabak_firebase_user", JSON.stringify({
+                uid: data.userId || 'qr_user',
+                email: data.userEmail,
+                displayName: data.userName || data.userEmail.split('@')[0],
+                viaQr: true
+              }));
+              setTimeout(() => {
+                window.location.href = "index.html";
+              }, 600);
+            }
+          }
+        }, (err) => {
+          statusMsg.textContent = "Firestore байланыс ескертуі: " + err.message;
+          statusMsg.className = "text-[11px] text-amber-600 mb-2";
+        });
+      } catch (e) {
+        console.error("QR Firestore error:", e);
+        statusMsg.textContent = "Ескерту: Firestore-ға қосылу мүмкін болмады (" + e.message + ")";
+        statusMsg.className = "text-[11px] text-red-600 mb-2";
+      }
+    }
   </script>
 </body>
 </html>
